@@ -15,8 +15,8 @@ namespace Convey.Tracing.Jaeger
     public static class Extensions
     {
         private static bool _initialized;
-        private const string SectionName = "redis";
-        private const string RegistryName = "persistence.redis";
+        private const string SectionName = "jaeger";
+        private const string RegistryName = "tracing.jaeger";
 
         public static IConveyBuilder AddJaeger(this IConveyBuilder builder, string sectionName = SectionName)
         {
