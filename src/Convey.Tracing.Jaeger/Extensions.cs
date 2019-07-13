@@ -32,6 +32,7 @@ namespace Convey.Tracing.Jaeger
 
         public static IConveyBuilder AddJaeger(this IConveyBuilder builder, JaegerOptions options)
         {
+            builder.Services.AddSingleton(options);
             if (!builder.TryRegister(RegistryName) || _initialized)
             {
                 return builder;
