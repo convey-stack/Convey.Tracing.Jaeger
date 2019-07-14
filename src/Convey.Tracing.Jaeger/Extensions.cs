@@ -23,8 +23,9 @@ namespace Convey.Tracing.Jaeger
             var options = builder.GetOptions<JaegerOptions>(sectionName);
             return builder.AddJaeger(options);
         }
-        
-        public static IConveyBuilder AddJaeger(this IConveyBuilder builder, Func<IJaegerOptionsBuilder, IJaegerOptionsBuilder> buildOptions)
+
+        public static IConveyBuilder AddJaeger(this IConveyBuilder builder,
+            Func<IJaegerOptionsBuilder, IJaegerOptionsBuilder> buildOptions)
         {
             var options = buildOptions(new JaegerOptionsBuilder()).Build();
             return builder.AddJaeger(options);
@@ -51,16 +52,15 @@ namespace Convey.Tracing.Jaeger
             {
                 var loggerFactory = sp.GetRequiredService<ILoggerFactory>();
 
-                var reporter = new RemoteReporter
-                        .Builder()
+                var reporter = new RemoteReporter.Builder()
                     .WithSender(new UdpSender(options.UdpHost, options.UdpPort, options.MaxPacketSize))
                     .WithLoggerFactory(loggerFactory)
                     .Build();
 
                 var sampler = GetSampler(options);
 
-                var tracer = new Tracer
-                        .Builder(options.ServiceName)
+                var tracer = new Tracer.Builder(options.ServiceName)
+                    .WithLoggerFactory(loggerFactory)
                     .WithReporter(reporter)
                     .WithSampler(sampler)
                     .Build();
