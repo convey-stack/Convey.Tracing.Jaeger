@@ -1,10 +1,12 @@
 using System;
 using Convey.Tracing.Jaeger.Builders;
+using Convey.Tracing.Jaeger.Middlewares;
 using Convey.Tracing.Jaeger.Tracers;
 using Jaeger;
 using Jaeger.Reporters;
 using Jaeger.Samplers;
 using Jaeger.Senders;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using OpenTracing;
@@ -34,13 +36,6 @@ namespace Convey.Tracing.Jaeger
         public static IConveyBuilder AddJaeger(this IConveyBuilder builder, JaegerOptions options)
         {
             builder.Services.AddSingleton(options);
-            if (!builder.TryRegister(RegistryName) || _initialized)
-            {
-                return builder;
-            }
-
-            _initialized = true;
-
             if (!options.Enabled)
             {
                 var defaultTracer = ConveyDefaultTracer.Create();
@@ -48,6 +43,12 @@ namespace Convey.Tracing.Jaeger
                 return builder;
             }
 
+            if (!builder.TryRegister(RegistryName) || _initialized)
+            {
+                return builder;
+            }
+
+            _initialized = true;
             builder.Services.AddSingleton<ITracer>(sp =>
             {
                 var loggerFactory = sp.GetRequiredService<ILoggerFactory>();
@@ -71,6 +72,17 @@ namespace Convey.Tracing.Jaeger
             });
 
             return builder;
+        }
+
+        public static IApplicationBuilder UseJaeger(this IApplicationBuilder app)
+        {
+            JaegerOptions options;
+            using (var scope = app.ApplicationServices.CreateScope())
+            {
+                options = scope.ServiceProvider.GetService<JaegerOptions>();
+            }
+
+            return options.Enabled ? app.UseMiddleware<JaegerHttpMiddleware>() : app;
         }
 
         private static ISampler GetSampler(JaegerOptions options)
